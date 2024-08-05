@@ -27,6 +27,8 @@
 
 #else
 /* Generic */
+#include <time.h>
+
 #define UNIT_TYPE struct timespec
 #define UNIT_NAME "ns"
 #define PREPARE() do {} while (0)
@@ -34,4 +36,6 @@
 #define DIFF(start, end) (end.tv_sec * 1000000000 + end.tv_nsec \
                            - start.tv_sec * 1000000000 + start.tv_nsec)
 #endif
+
+enum { Num_rounds = 300000, Num_IPCs = Num_rounds * 2 };
 

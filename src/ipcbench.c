@@ -29,8 +29,6 @@ static void *fn_a(void *ignore)
   l4_utcb_t *utcb = l4_utcb();
   l4_msgtag_t tag = l4_msgtag(0, 0, 0, 0);
 
-  enum { Num_rounds = 300000, Num_IPCs = Num_rounds * 2 };
-
   PREPARE();
 
   l4_msgtag_t r;
