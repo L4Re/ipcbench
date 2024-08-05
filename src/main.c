@@ -22,7 +22,7 @@
 
 #define UNIT_TYPE l4_uint64_t
 #define UNIT_NAME "cpu-cycles"
-#define PREPARE() do { asm volatile ("msr PMCCFILTR_EL0, %0" : : "r" (1 << 27)); } while (0) // Enable counting in EL2 too
+#define PREPARE() do { asm volatile ("msr PMCCFILTR_EL0, %0" : : "r" (1UL << 27)); } while (0) // Enable counting in EL2 too
 #define TAKE_TIME(v) asm volatile ("mrs %0, PMCCNTR_EL0" : "=r"(v))
 #define DIFF(start, end) ((end) - (start))
 
@@ -30,7 +30,7 @@
 
 #define UNIT_TYPE l4_uint64_t
 #define UNIT_NAME "cpu-cycles"
-#define PREPARE() do { asm volatile ("mcr p15, 0, %0, c14, c15, 3" : : "r" (1 << 27)); } while (0) // Enable counting in EL2 too
+#define PREPARE() do { asm volatile ("mcr p15, 0, %0, c14, c15, 3" : : "r" (1UL << 27)); } while (0) // Enable counting in EL2 too
 #define TAKE_TIME(v) asm volatile ("mrc p15, 0, %0, c9, c13, 0" : "=r" (v))
 #define DIFF(start, end) ((end) - (start))
 
@@ -49,8 +49,9 @@ enum { Enable_return_checks = 1 };
 static l4_cap_idx_t th_cap_b = L4_INVALID_CAP;
 
 /* This thread is initiating IPC */
-static void *fn_a(void *)
+static void *fn_a(void *ignore)
 {
+  (void)ignore;
   /* Wait for partner thread to be ready */
   while (!l4_is_valid_cap(th_cap_b))
     l4_ipc_sleep_ms(1);
@@ -82,8 +83,9 @@ static void *fn_a(void *)
 }
 
 /* This thread is replying to IPC */
-static void *fn_b(void *)
+static void *fn_b(void *ignore)
 {
+  (void)ignore;
   l4_utcb_t *utcb = l4_utcb();
   l4_umword_t label;
 
