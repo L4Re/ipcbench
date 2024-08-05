@@ -29,12 +29,11 @@
 /* Generic */
 #include <time.h>
 
-#define UNIT_TYPE struct timespec
+#define UNIT_TYPE l4_uint64_t
 #define UNIT_NAME "ns"
 #define PREPARE() do {} while (0)
-#define TAKE_TIME(v) clock_gettime(CLOCK_REALTIME, &v)
-#define DIFF(start, end) (end.tv_sec * 1000000000 + end.tv_nsec \
-                           - start.tv_sec * 1000000000 + start.tv_nsec)
+#define TAKE_TIME(v) ({ struct timespec ts; clock_gettime(CLOCK_REALTIME, &ts); v = ts.tv_sec * 1000000000 + ts.tv_nsec;})
+#define DIFF(start, end) ((end) - (start))
 #endif
 
 enum { Num_rounds = 300000, Num_IPCs = Num_rounds * 2 };
