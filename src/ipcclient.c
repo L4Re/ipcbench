@@ -25,20 +25,20 @@ int main(int argc, char **argv)
   PREPARE();
 
   l4_msgtag_t r;
-  UNIT_TYPE start, end;
+  UNIT_TYPE(start);
+  UNIT_TYPE(end);
   TAKE_TIME(start);
+  SYNC();
   for (int i = 0; i < Num_rounds; ++i)
     {
       r = l4_ipc_call(server, utcb, tag, L4_IPC_NEVER);
       if (Enable_return_checks && l4_ipc_error(r, utcb))
         printf("IPC error\n");
     }
+  SYNC();
   TAKE_TIME(end);
 
-  UNIT_TYPE diff = DIFF(start, end);
-
-  printf("done %d IPCs in %lld " UNIT_NAME ", %lld " UNIT_NAME "/IPC\n",
-         Num_IPCs, diff, diff / Num_IPCs);
+  PRINT_RESULT(start, end, "IPC");
 
   return 0;
 }
