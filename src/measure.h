@@ -41,7 +41,7 @@
 #define NUMBERS 1
 #define UNIT_TYPE(x) l4_uint64_t x
 #define UNIT_NAME(x) "cpu-cycles"
-#define PREPARE() do { asm volatile ("mcr p15, 0, %0, c14, c15, 3" : : "r" (1UL << 27)); } while (0) // Enable counting in EL2 too
+#define PREPARE() do { asm volatile ("mcr p15, 0, %0, c14, c15, 7" : : "r" (1UL << 27)); } while (0) // Enable counting in EL2 too
 #define TAKE_TIME(v) asm volatile ("mrc p15, 0, %0, c9, c13, 0" : "=r" (v))
 #define DIFF(x, start, end) ((end) - (start))
 #define SYNC() do {} while (0)
