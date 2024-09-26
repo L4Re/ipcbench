@@ -38,7 +38,7 @@ int main(int argc, char **argv)
   SYNC();
   TAKE_TIME(end);
 
-  PRINT_RESULT(start, end, "IPC");
+  PRINT_RESULT(start, end, "IPC", 2);
 
   return 0;
 }
