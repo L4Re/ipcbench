@@ -67,6 +67,12 @@ static void *fn_b(void *ignore)
   l4_utcb_t *utcb = l4_utcb();
   l4_umword_t label;
 
+  // Allow cancellation of thread at end of test
+  check_pthr_err(pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL),
+                 "pthread_setcanceltype");
+  check_pthr_err(pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL),
+                 "pthread_setcancelstate");
+
   l4_msgtag_t r = l4_ipc_wait(utcb, &label, L4_IPC_NEVER);
   if (Enable_return_checks && l4_ipc_error(r, utcb))
     printf("fn_b: ipc err (wait)\n");
@@ -98,8 +104,9 @@ int main(int argc, char **argv)
   check_pthr_err(pthread_create(&thread_a, NULL, fn_a, &cp),
                  "create thread a");
 
-  void *retval;
-  check_pthr_err(pthread_join(thread_a, &retval), "join thread a");
+  check_pthr_err(pthread_join(thread_a, NULL), "join thread a");
+  check_pthr_err(pthread_cancel(thread_b), "cancel thread b");
+  check_pthr_err(pthread_join(thread_b, NULL), "join thread b");
 
   return 0;
 }
