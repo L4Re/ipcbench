@@ -16,7 +16,7 @@
 
 struct Caller_params
 {
-  l4_cap_idx_t receiver_cap;
+  l4_cap_idx_t responder_cap;
 };
 
 enum { Enable_return_checks = 1 };
@@ -31,13 +31,13 @@ static void check_pthr_err(int r, char const *msg)
 }
 
 /* This thread is initiating IPC */
-static void *fn_a(void *pv)
+static void *fn_caller(void *pv)
 {
   struct Caller_params *params = (struct Caller_params *)pv;
 
   l4_utcb_t *utcb = l4_utcb();
   l4_msgtag_t tag = l4_msgtag(0, 0, 0, 0);
-  l4_cap_idx_t th_cap_b = params->receiver_cap;
+  l4_cap_idx_t responder_cap = params->responder_cap;
 
   PREPARE();
 
@@ -48,9 +48,9 @@ static void *fn_a(void *pv)
   SYNC();
   for (int i = 0; i < Num_rounds; ++i)
     {
-      r = l4_ipc_call(th_cap_b, utcb, tag, L4_IPC_NEVER);
+      r = l4_ipc_call(responder_cap, utcb, tag, L4_IPC_NEVER);
       if (Enable_return_checks && l4_ipc_error(r, utcb))
-        printf("fn_a: ipc err\n");
+        printf("caller: ipc err\n");
     }
   SYNC();
   TAKE_TIME(end);
@@ -61,7 +61,7 @@ static void *fn_a(void *pv)
 }
 
 /* This thread is replying to IPC */
-static void *fn_b(void *ignore)
+static void *fn_responder(void *ignore)
 {
   (void)ignore;
   l4_utcb_t *utcb = l4_utcb();
@@ -75,14 +75,14 @@ static void *fn_b(void *ignore)
 
   l4_msgtag_t r = l4_ipc_wait(utcb, &label, L4_IPC_NEVER);
   if (Enable_return_checks && l4_ipc_error(r, utcb))
-    printf("fn_b: ipc err (wait)\n");
+    printf("responder: ipc err (wait)\n");
 
   l4_msgtag_t tag = l4_msgtag(0, 0, 0, 0);
   while (1)
     {
       r = l4_ipc_reply_and_wait(utcb, tag, &label, L4_IPC_NEVER);
       if (Enable_return_checks && l4_ipc_error(r, utcb))
-        printf("fn_b: ipc err (reply+wait)\n");
+        printf("responder: ipc err (reply+wait)\n");
     }
 
   return NULL;
@@ -93,20 +93,20 @@ int main(int argc, char **argv)
   (void)argc;
   (void)argv;
 
-  pthread_t thread_a;
-  pthread_t thread_b;
+  pthread_t thread_caller;
+  pthread_t thread_responder;
 
-  check_pthr_err(pthread_create(&thread_b, NULL, fn_b, NULL),
-                 "create thread b");
+  check_pthr_err(pthread_create(&thread_responder, NULL, fn_responder, NULL),
+                 "create responder thread");
 
   struct Caller_params cp;
-  cp.receiver_cap = pthread_l4_cap(thread_b);
-  check_pthr_err(pthread_create(&thread_a, NULL, fn_a, &cp),
-                 "create thread a");
+  cp.responder_cap = pthread_l4_cap(thread_responder);
+  check_pthr_err(pthread_create(&thread_caller, NULL, fn_caller, &cp),
+                 "create caller thread");
 
-  check_pthr_err(pthread_join(thread_a, NULL), "join thread a");
-  check_pthr_err(pthread_cancel(thread_b), "cancel thread b");
-  check_pthr_err(pthread_join(thread_b, NULL), "join thread b");
+  check_pthr_err(pthread_join(thread_caller, NULL), "join caller thread");
+  check_pthr_err(pthread_cancel(thread_responder), "cancel responder thread");
+  check_pthr_err(pthread_join(thread_responder, NULL), "join responder thread");
 
   return 0;
 }
