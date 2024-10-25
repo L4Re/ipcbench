@@ -8,6 +8,7 @@
 
 #include <l4/sys/ipc.h>
 #include <l4/sys/rcv_endpoint.h>
+#include <l4/sys/thread.h>
 #include <l4/re/env.h>
 
 #include "ipc_common.h"
@@ -62,6 +63,13 @@ unsigned count_cpus(void)
   unsigned num_cpus = 0;
   enumerate_cpus(&count_cpus_cb, &num_cpus);
   return num_cpus;
+}
+
+long run_thread(l4_cap_idx_t thread, unsigned cpu)
+{
+  l4_sched_param_t sp = l4_sched_param(2, 0);
+  sp.affinity = l4_sched_cpu_set(cpu, 0, 1);
+  return l4_error(l4_scheduler_run_thread(l4re_env()->scheduler, thread, &sp));
 }
 
 /* This thread is initiating IPC */
@@ -120,4 +128,31 @@ void *fn_responder(void *ignore)
     }
 
   return NULL;
+}
+
+void syscall_bench(l4_cap_idx_t thread, unsigned cpu)
+{
+  l4_msgtag_t tag = l4_msgtag(L4_PROTO_THREAD, 1, 0, 0);
+  l4_utcb_t *utcb = l4_utcb();
+
+  PREPARE();
+
+  l4_utcb_mr_u(utcb)->mr[L4_THREAD_CONTROL_MR_IDX_FLAGS] = L4_THREAD_CONTROL_OP;
+
+  UNIT_TYPE(start);
+  UNIT_TYPE(end);
+  TAKE_TIME(start);
+  SYNC();
+  for (int i = 0; i < Num_rounds; ++i)
+    {
+      // This will go to the thread's control function and bail out
+      // early there.
+      l4_msgtag_t r = l4_ipc_call(thread, utcb, tag, L4_IPC_NEVER);
+      if (Enable_return_checks && l4_ipc_error(r, utcb))
+        printf("IPC error\n");
+    }
+  SYNC();
+  TAKE_TIME(end);
+
+  PRINT_RESULT(cpu, start, end, "syscall", 1);
 }

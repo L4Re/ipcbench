@@ -24,13 +24,6 @@ struct Spawn_param
   struct Pair *pairs;
 };
 
-static long run_thread(l4_cap_idx_t thread, unsigned cpu)
-{
-  l4_sched_param_t sp = l4_sched_param(2, 0);
-  sp.affinity = l4_sched_cpu_set(cpu, 0, 1);
-  return l4_error(l4_scheduler_run_thread(l4re_env()->scheduler, thread, &sp));
-}
-
 static void spawn_pair(unsigned cpu, void *arg)
 {
   struct Spawn_param *param = (struct Spawn_param *)arg;
