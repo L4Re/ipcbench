@@ -99,6 +99,13 @@ int main(int argc, char **argv)
   check_pthr_err(pthread_create(&thread_responder, NULL, fn_responder, NULL),
                  "create responder thread");
 
+  // Wait for responder to be ready
+  l4_utcb_t *utcb = l4_utcb();
+  if (l4_ipc_error(l4_ipc_call(pthread_l4_cap(thread_responder), utcb,
+                               l4_msgtag(0, 0, 0, 0), L4_IPC_NEVER),
+                   utcb))
+    printf("Error syncing with responder thread!\n");
+
   struct Caller_params cp;
   cp.responder_cap = pthread_l4_cap(thread_responder);
   check_pthr_err(pthread_create(&thread_caller, NULL, fn_caller, &cp),
