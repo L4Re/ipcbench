@@ -1,0 +1,11 @@
+entry ipcbench
+roottask moe rom/ipcbench.cfg
+module l4re
+module ned
+module ipcbench
+module ipcbench_client
+module ipcbench_server
+module ipcbench_parallel
+module syscallbench
+module syscallbench_parallel
+module ../pkg/ipcbench/conf/ipcbench.cfg
