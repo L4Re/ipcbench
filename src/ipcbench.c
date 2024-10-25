@@ -3,8 +3,8 @@
 /* by Adam Lackorzynski <adam@l4re.org> */
 
 #include <pthread-l4.h>
-#include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <time.h>
 
@@ -17,6 +17,15 @@
 enum { Enable_return_checks = 1 };
 
 static l4_cap_idx_t th_cap_b = L4_INVALID_CAP;
+
+static void check_pthr_err(int r, char const *msg)
+{
+  if (r != 0)
+    {
+      printf("error: %s: %s (%d)\n", msg, strerror(r), r);
+      exit(1);
+    }
+}
 
 /* This thread is initiating IPC */
 static void *fn_a(void *ignore)
@@ -83,19 +92,15 @@ int main(int argc, char **argv)
   pthread_t thread_b;
   pthread_attr_t attr;
 
-  int r;
+  check_pthr_err(pthread_attr_init(&attr), "pthread_attr_init");
 
-  r = pthread_attr_init(&attr);
-  assert(r == 0);
-
-  r = pthread_create(&thread_a, &attr, fn_a, NULL);
-  assert(r == 0);
-  r = pthread_create(&thread_b, &attr, fn_b, NULL);
-  assert(r == 0);
+  check_pthr_err(pthread_create(&thread_a, &attr, fn_a, NULL),
+                 "create thread a");
+  check_pthr_err(pthread_create(&thread_b, &attr, fn_b, NULL),
+                 "create thread b");
 
   void *retval;
-  r = pthread_join(thread_a, &retval);
-  assert(r == 0);
+  check_pthr_err(pthread_join(thread_a, &retval), "join thread a");
 
   return 0;
 }
