@@ -21,6 +21,39 @@ struct Caller_params
 
 enum { Enable_return_checks = 1 };
 
+static void enumerate_cpus(void (*cb)(unsigned cpu, void *arg), void *arg)
+{
+  enum { Map_size = sizeof(l4_umword_t) * 8 };
+
+  l4_cap_idx_t sched = l4re_env()->scheduler;
+  l4_umword_t cpu_max = 0;
+  unsigned offset = 0;
+
+  do
+    {
+      l4_sched_cpu_set_t cpus = l4_sched_cpu_set(offset, 0, 0);
+      if (l4_error(l4_scheduler_info(sched, &cpu_max, &cpus)))
+        {
+          printf("Error enumerating CPUs!\n");
+          return;
+        }
+
+      for (unsigned i = 0; i < Map_size; i++)
+        if (cpus.map & (1UL << i))
+          cb(offset + i, arg);
+
+      offset += Map_size;
+    }
+  while (offset < cpu_max);
+}
+
+static void count_cpus(unsigned cpu, void *arg)
+{
+  (void)cpu;
+  unsigned *num = (unsigned *)arg;
+  (*num)++;
+}
+
 static void check_pthr_err(int r, char const *msg)
 {
   if (r != 0)
@@ -92,6 +125,9 @@ int main(int argc, char **argv)
 {
   (void)argc;
   (void)argv;
+  unsigned num_cpus = 0;
+  enumerate_cpus(&count_cpus, &num_cpus);
+  printf("Found %u CPUs\n", num_cpus);
 
   pthread_t thread_caller;
   pthread_t thread_responder;
