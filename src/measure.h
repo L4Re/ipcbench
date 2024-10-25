@@ -59,10 +59,10 @@
 #define SYNC() do {} while (0)
 #endif
 
-#define PRINT_RESULT(start, end, opname, factor) \
+#define PRINT_RESULT(cpu, start, end, opname, factor) \
   for (unsigned n = 0; n < NUMBERS; ++n) \
-    printf("done %d " opname "s in %lld %s, %lld %s/" opname "\n", \
-           Num_rounds * factor, DIFF(n, start, end), UNIT_NAME(n), \
+    printf("CPU %2u done %d " opname "s in %lld %s, %lld %s/" opname "\n", \
+           cpu, Num_rounds * factor, DIFF(n, start, end), UNIT_NAME(n), \
            DIFF(n, start, end) / (Num_rounds * factor), UNIT_NAME(n)); \
 
 enum { Num_rounds = 300000 };

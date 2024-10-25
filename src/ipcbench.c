@@ -110,7 +110,7 @@ static void *fn_caller(void *pv)
   SYNC();
   TAKE_TIME(end);
 
-  PRINT_RESULT(start, end, "IPC", 2);
+  PRINT_RESULT(params->cpu, start, end, "IPC", 2);
 
   return NULL;
 }

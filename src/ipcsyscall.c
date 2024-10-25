@@ -40,7 +40,7 @@ int main(int argc, char **argv)
   SYNC();
   TAKE_TIME(end);
 
-  PRINT_RESULT(start, end, "syscall", 1);
+  PRINT_RESULT(0, start, end, "syscall", 1);
 
   return 0;
 }
