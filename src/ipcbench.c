@@ -14,9 +14,12 @@
 
 #include "measure.h"
 
-enum { Enable_return_checks = 1 };
+struct Caller_params
+{
+  l4_cap_idx_t receiver_cap;
+};
 
-static l4_cap_idx_t th_cap_b = L4_INVALID_CAP;
+enum { Enable_return_checks = 1 };
 
 static void check_pthr_err(int r, char const *msg)
 {
@@ -28,15 +31,13 @@ static void check_pthr_err(int r, char const *msg)
 }
 
 /* This thread is initiating IPC */
-static void *fn_a(void *ignore)
+static void *fn_a(void *pv)
 {
-  (void)ignore;
-  /* Wait for partner thread to be ready */
-  while (!l4_is_valid_cap(th_cap_b))
-    l4_ipc_sleep_ms(1);
+  struct Caller_params *params = (struct Caller_params *)pv;
 
   l4_utcb_t *utcb = l4_utcb();
   l4_msgtag_t tag = l4_msgtag(0, 0, 0, 0);
+  l4_cap_idx_t th_cap_b = params->receiver_cap;
 
   PREPARE();
 
@@ -66,8 +67,6 @@ static void *fn_b(void *ignore)
   l4_utcb_t *utcb = l4_utcb();
   l4_umword_t label;
 
-  th_cap_b = pthread_l4_cap(pthread_self());
-
   l4_msgtag_t r = l4_ipc_wait(utcb, &label, L4_IPC_NEVER);
   if (Enable_return_checks && l4_ipc_error(r, utcb))
     printf("fn_b: ipc err (wait)\n");
@@ -90,14 +89,14 @@ int main(int argc, char **argv)
 
   pthread_t thread_a;
   pthread_t thread_b;
-  pthread_attr_t attr;
 
-  check_pthr_err(pthread_attr_init(&attr), "pthread_attr_init");
-
-  check_pthr_err(pthread_create(&thread_a, &attr, fn_a, NULL),
-                 "create thread a");
-  check_pthr_err(pthread_create(&thread_b, &attr, fn_b, NULL),
+  check_pthr_err(pthread_create(&thread_b, NULL, fn_b, NULL),
                  "create thread b");
+
+  struct Caller_params cp;
+  cp.receiver_cap = pthread_l4_cap(thread_b);
+  check_pthr_err(pthread_create(&thread_a, NULL, fn_a, &cp),
+                 "create thread a");
 
   void *retval;
   check_pthr_err(pthread_join(thread_a, &retval), "join thread a");
