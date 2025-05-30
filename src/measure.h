@@ -19,7 +19,7 @@ static inline void check_kernel_features(void)
 #if defined(__amd64__) || defined(__i686__)
 #include <l4/util/rdtsc.h>
 #include <l4/util/cpu.h>
-#if 1
+#if 0
 #define NUMBERS 1
 #define UNIT_NAME(x) "cpu-cycles"
 #define TAKE_TIME(v) v[0] = l4_rdtsc()
