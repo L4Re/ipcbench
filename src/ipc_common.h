@@ -22,3 +22,6 @@ void *fn_caller(void *cp);
 void *fn_responder(void *ignore);
 
 void syscall_bench(l4_cap_idx_t thread, unsigned cpu);
+
+void wait_for_start(void);
+void start(void);

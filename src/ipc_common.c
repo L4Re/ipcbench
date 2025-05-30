@@ -51,6 +51,19 @@ void enumerate_cpus(void (*cb)(unsigned cpu, void *arg), void *arg)
   while (offset < cpu_max);
 }
 
+static unsigned start_sync_val;
+
+void wait_for_start()
+{
+  while (!start_sync_val)
+    asm volatile("" : : : "memory");
+}
+
+void start()
+{
+  start_sync_val = 1;
+}
+
 static void count_cpus_cb(unsigned cpu, void *arg)
 {
   (void)cpu;
@@ -80,6 +93,8 @@ void *fn_caller(void *cp)
   l4_utcb_t *utcb = l4_utcb();
   l4_msgtag_t tag = l4_msgtag(0, 0, 0, 0);
   l4_cap_idx_t responder_cap = params->responder_cap;
+
+  wait_for_start();
 
   PREPARE();
 

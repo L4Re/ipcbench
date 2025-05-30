@@ -25,6 +25,7 @@ struct Spawn_param
 static void *fn_syscall(void *arg)
 {
   struct Thread *thread = (struct Thread *)arg;
+  wait_for_start();
   syscall_bench(pthread_l4_cap(thread->thread), thread->cpu);
   return NULL;
 }
@@ -73,6 +74,8 @@ int main(int argc, char **argv)
   struct Thread threads[num_cpus];
   struct Spawn_param sp = {0, num_cpus, threads};
   enumerate_cpus(&spawn_threads, &sp);
+
+  start();
 
   // Wait for tests to finish
   for (unsigned i = 0; i < sp.idx; i++)

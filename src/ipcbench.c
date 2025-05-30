@@ -25,6 +25,7 @@ int main(int argc, char **argv)
     printf("Error syncing with responder thread!\n");
 
   struct Caller_params cp = {pthread_l4_cap(thread_responder), 0};
+  start();
   fn_caller(&cp);
 
   check_pthr_err(pthread_cancel(thread_responder), "cancel responder thread");

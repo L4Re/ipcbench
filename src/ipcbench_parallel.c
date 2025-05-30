@@ -91,6 +91,8 @@ int main(int argc, char **argv)
   struct Spawn_param sp = {0, num_cpus, pairs};
   enumerate_cpus(&spawn_pair, &sp);
 
+  start();
+
   // Wait for tests to finish
   for (unsigned i = 0; i < sp.idx; i++)
     {
