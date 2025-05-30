@@ -22,9 +22,12 @@ int main(int argc, char **argv)
   l4_utcb_t *utcb = l4_utcb();
   l4_msgtag_t tag = l4_msgtag(0, 0, 0, 0);
 
+  l4_msgtag_t r = l4_ipc_call(server, utcb, tag, L4_IPC_NEVER);
+  if (l4_ipc_error(r, utcb))
+    printf("IPC error on initial rendevouz\n");
+
   PREPARE();
 
-  l4_msgtag_t r;
   UNIT_TYPE(start);
   UNIT_TYPE(end);
   TAKE_TIME(start);
