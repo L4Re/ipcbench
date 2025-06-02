@@ -75,6 +75,8 @@ int main(int argc, char **argv)
   struct Spawn_param sp = {0, num_cpus, threads};
   enumerate_cpus(&spawn_threads, &sp);
 
+  set_completion_counter(sp.idx);
+
   start();
 
   // Wait for tests to finish

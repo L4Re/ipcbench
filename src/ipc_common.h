@@ -25,3 +25,5 @@ void syscall_bench(l4_cap_idx_t thread, unsigned cpu);
 
 void wait_for_start(void);
 void start(void);
+void set_completion_counter(unsigned val);
+void finished(void);

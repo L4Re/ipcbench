@@ -59,9 +59,27 @@ void wait_for_start()
     asm volatile("" : : : "memory");
 }
 
-void start()
+void start(void)
 {
   start_sync_val = 1;
+}
+
+static unsigned completion_counter = 1;
+
+void set_completion_counter(unsigned val)
+{
+  completion_counter = val;
+}
+
+void finished(void)
+{
+  unsigned n = __atomic_sub_fetch(&completion_counter, 1, __ATOMIC_SEQ_CST);
+
+  if (n == 0)
+    start_sync_val = ~0u;
+  else
+    while (start_sync_val != ~0u)
+      asm volatile("" : : : "memory");
 }
 
 static void count_cpus_cb(unsigned cpu, void *arg)
@@ -111,6 +129,8 @@ void *fn_caller(void *cp)
     }
   SYNC();
   TAKE_TIME(end);
+
+  finished();
 
   PRINT_RESULT(params->cpu, start, end, "IPC", 2);
 
@@ -168,6 +188,8 @@ void syscall_bench(l4_cap_idx_t thread, unsigned cpu)
     }
   SYNC();
   TAKE_TIME(end);
+
+  finished();
 
   PRINT_RESULT(cpu, start, end, "syscall", 1);
 }
